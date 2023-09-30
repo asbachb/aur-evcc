@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+  workflow_dispatch:
+
+jobs:
+  
+  build:
+    name: Build package with makepkg
+
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v3
+      
+      - name: Build package
+        run: |
+          env
+
+          chown -R nobody:nobody .
+          pacman -Sy
+
+          echo 'nobody ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/nobody
+          HOME=$GITHUB_WORKSPACE sudo --user nobody --preserve-env=HOME -- makepkg --syncdeps --noconfirm
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: evcc-artifact
+          path: evcc-*.pkg.tar.zst
